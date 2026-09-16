@@ -1,0 +1,13 @@
+module.exports = {
+  Role: { ADMIN: 'ADMIN', SALES_USER: 'SALES_USER' },
+  EnquiryStatus: { NEW: 'NEW', QUOTED: 'QUOTED', WON: 'WON', LOST: 'LOST' },
+  QuotationStatus: { DRAFT: 'DRAFT', SENT: 'SENT', ACCEPTED: 'ACCEPTED', REJECTED: 'REJECTED' },
+  SalesOrderStatus: { PENDING: 'PENDING', CONFIRMED: 'CONFIRMED', DISPATCHED: 'DISPATCHED', CANCELLED: 'CANCELLED' },
+  NumberPrefix: {
+    ENQUIRY: 'ENQ',
+    QUOTATION: 'QT',
+    SALES_ORDER: 'SO',
+    DISPATCH: 'DISP',
+  },
+  STOCK_ALERT_THRESHOLD: 50,
+};
