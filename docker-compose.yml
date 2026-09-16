@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: erpdev123
+      POSTGRES_DB: erp_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://postgres:erpdev123@db:5432/erp_dev
+      TEST_DATABASE_URL: postgresql://postgres:erpdev123@db:5432/erp_test
+      JWT_SECRET: change-me-in-production
+      JWT_EXPIRES_IN: 8h
+      CLIENT_ORIGIN: http://localhost:8080
+      NODE_ENV: production
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    command: >
+      sh -c "npx prisma migrate deploy &&
+             node prisma/seed.js &&
+             npm start"
+volumes:
+  pgdata:
