@@ -1,5 +1,7 @@
 # Zenitek ERP — Manufacturing & Supply Platform
 
+> **Live demo:** https://fundsroom-assignment-2.onrender.com
+
 A web-based ERP managing the end-to-end sales pipeline for a manufacturing company:
 
 **Customer Enquiry → Quotation → Sales Order → Inventory Reservation → Dispatch**
@@ -302,10 +304,15 @@ Set `NODE_ENV=production` and a strong `JWT_SECRET` in `backend/.env`.
 
 - **Database**: provision on [Neon](https://neon.tech), copy the pooled `DATABASE_URL`.
 - **API + SPA**: a [Render](https://render.com) web service — root `backend`, build
-  `npm ci && npx prisma migrate deploy && npm run seed`, start `npm start`; set `DATABASE_URL`,
-  `JWT_SECRET`, `CLIENT_ORIGIN`, `NODE_ENV=production`.
+  `npm ci && npx prisma migrate deploy && npm run seed && cd ../frontend && npm ci --include=dev && npm run build`
+  (`--include=dev` ensures devDependencies like vite install even under Render's `NODE_ENV=production`),
+  start `npm start`; set `DATABASE_URL`, `JWT_SECRET`, `CLIENT_ORIGIN`, `NODE_ENV=production`.
+  The frontend build emits into `backend/public`, so one service serves the SPA + `/api` + `/api-docs`.
 - **Frontend only (optional)**: deploy `frontend` on Vercel with `vite build` and rewrite `/api`
   to the Render URL; set `CLIENT_ORIGIN` (CORS) to the Vercel origin.
+
+> **Current live deployment:** https://fundsroom-assignment-2.onrender.com
+> (Neon PostgreSQL + Render web service; SPA, REST API and Swagger docs all on this one URL.)
 
 > Full walkthrough, Dockerfile details and env specifics: `docs/deployment.md`.
 
