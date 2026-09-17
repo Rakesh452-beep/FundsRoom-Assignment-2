@@ -119,13 +119,9 @@ export default function Quotations() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Quotations</h1>
-          <p className="text-sm text-slate-500">Pricing enquiries with backend-calculated totals</p>
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <select className="px-3 py-2 text-sm rounded-lg border border-slate-300" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+          <select className="px-3 py-2 text-sm rounded-xl bg-white border border-line text-bone focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
             <option value="">All statuses</option>
             {['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED'].map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -137,15 +133,15 @@ export default function Quotations() {
         <>
           <Table headers={['Number', 'Customer', 'Enquiry', 'Grand Total', 'Valid Until', 'Status', 'Actions']}>
             {data.items.map((q) => (
-              <tr key={q.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => openDetail(q.id)}>
-                <td className="px-4 py-3 font-semibold text-blue-700">{q.quotationNumber}</td>
-                <td className="px-4 py-3 text-sm font-medium text-slate-800">{q.customer.companyName}</td>
-                <td className="px-4 py-3 text-sm text-slate-500">{q.enquiry?.enquiryNumber}</td>
-                <td className="px-4 py-3 text-sm font-semibold text-slate-800">{formatINR(q.grandTotal)}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">{formatDate(q.validUntil)}</td>
+              <tr key={q.id} className="hover:bg-surface-deep cursor-pointer" onClick={() => openDetail(q.id)}>
+                <td className="px-4 py-3 font-semibold text-accent-dark">{q.quotationNumber}</td>
+                <td className="px-4 py-3 text-sm font-medium text-ink">{q.customer.companyName}</td>
+                <td className="px-4 py-3 text-sm text-ink-muted">{q.enquiry?.enquiryNumber}</td>
+                <td className="px-4 py-3 text-sm font-semibold text-ink">{formatINR(q.grandTotal)}</td>
+                <td className="px-4 py-3 text-sm text-ink-soft">{formatDate(q.validUntil)}</td>
                 <td className="px-4 py-3"><StatusBadge status={q.status} /></td>
                 <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                  <a href={quotationApi.pdfUrl(q.id)} target="_blank" rel="noreferrer"><Button variant="secondary" size="sm">PDF</Button></a>
+                  <Button variant="secondary" size="sm" onClick={() => quotationApi.downloadPdf(q.id)}>PDF</Button>
                 </td>
               </tr>
             ))}
@@ -158,21 +154,21 @@ export default function Quotations() {
         {detail && (
           <div className="space-y-5">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div><div className="text-xs text-slate-400">Customer</div><div className="font-semibold text-slate-800">{detail.customer.companyName}</div></div>
-              <div><div className="text-xs text-slate-400">Enquiry</div><div className="text-slate-700">{detail.enquiry?.enquiryNumber}</div></div>
-              <div><div className="text-xs text-slate-400">Discount</div><div className="text-slate-700">{Number(detail.discountPct)}%</div></div>
-              <div><div className="text-xs text-slate-400">GST</div><div className="text-slate-700">{Number(detail.gstPct)}%</div></div>
-              <div><div className="text-xs text-slate-400">Grand Total</div><div className="font-bold text-emerald-700">{formatINR(detail.grandTotal)}</div></div>
-              <div><div className="text-xs text-slate-400">Valid Until</div><div className="text-slate-700">{formatDate(detail.validUntil)}</div></div>
-              <div><div className="text-xs text-slate-400">Status</div><StatusBadge status={detail.status} /></div>
-              <div><div className="text-xs text-slate-400">Created by</div><div className="text-slate-700">{detail.createdBy?.name}</div></div>
+              <div><div className="text-xs text-ink-faint">Customer</div><div className="font-semibold text-ink">{detail.customer.companyName}</div></div>
+              <div><div className="text-xs text-ink-faint">Enquiry</div><div className="text-ink-soft">{detail.enquiry?.enquiryNumber}</div></div>
+              <div><div className="text-xs text-ink-faint">Discount</div><div className="text-ink-soft">{Number(detail.discountPct)}%</div></div>
+              <div><div className="text-xs text-ink-faint">GST</div><div className="text-ink-soft">{Number(detail.gstPct)}%</div></div>
+              <div><div className="text-xs text-ink-faint">Grand Total</div><div className="font-bold text-success">{formatINR(detail.grandTotal)}</div></div>
+              <div><div className="text-xs text-ink-faint">Valid Until</div><div className="text-ink-soft">{formatDate(detail.validUntil)}</div></div>
+              <div><div className="text-xs text-ink-faint">Status</div><StatusBadge status={detail.status} /></div>
+              <div><div className="text-xs text-ink-faint">Created by</div><div className="text-ink-soft">{detail.createdBy?.name}</div></div>
             </div>
 
             <Table headers={['#', 'Product', 'Qty', 'Unit Price', 'Line Amount']}>
               {detail.items.map((it, i) => (
                 <tr key={i}>
-                  <td className="px-4 py-2 text-sm text-slate-500">{i + 1}</td>
-                  <td className="px-4 py-2 text-sm"><div className="font-medium text-slate-800">{it.product.name}</div><div className="text-xs text-slate-400">{it.product.code}</div></td>
+                  <td className="px-4 py-2 text-sm text-ink-muted">{i + 1}</td>
+                  <td className="px-4 py-2 text-sm"><div className="font-medium text-ink">{it.product.name}</div><div className="text-xs text-ink-faint">{it.product.code}</div></td>
                   <td className="px-4 py-2 text-sm">{it.qty} {it.product.unit}</td>
                   <td className="px-4 py-2 text-sm">{formatINR(it.unitPrice)}</td>
                   <td className="px-4 py-2 text-sm font-semibold">{formatINR(it.lineAmount)}</td>
@@ -191,13 +187,11 @@ export default function Quotations() {
                   <Button variant="primary" size="sm" onClick={() => setConfirmAction({ type: 'convert', id: detail.id })}>Convert to Sales Order</Button>
                 )}
               </div>
-              <a href={quotationApi.pdfUrl(detail.id)} target="_blank" rel="noreferrer">
-                <Button variant="secondary" size="sm">Download PDF</Button>
-              </a>
+              <Button variant="secondary" size="sm" onClick={() => quotationApi.downloadPdf(detail.id)}>Download PDF</Button>
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">Activity</h4>
+              <h4 className="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-bone-faint mb-2">Activity</h4>
               <Timeline logs={detail.auditLogs} />
             </div>
           </div>
@@ -225,11 +219,11 @@ export default function Quotations() {
                 .map((e) => <option key={e.id} value={e.id}>{e.enquiryNumber} · {e.customer?.companyName}</option>)}
             </select>
           </Field>
-          {form.enquiryId && selectedProducts.length === 0 && <p className="text-sm text-amber-600">No products available for this enquiry.</p>}
+          {form.enquiryId && selectedProducts.length === 0 && <p className="text-sm text-warning">No products available for this enquiry.</p>}
           {selectedProducts.length > 0 && (
             <>
               <div>
-                <span className="block text-sm font-medium text-slate-700 mb-1">Products — qty, edit unit price</span>
+                <span className="block text-sm font-medium text-ink-soft mb-1">Products — qty, edit unit price</span>
                 <ProductLinesEditor
                   lines={form.lines}
                   setLines={(fn) => setForm({ ...form, lines: fn(form.lines) })}
@@ -242,7 +236,7 @@ export default function Quotations() {
                 <Field label="Discount %"><input type="number" min="0" max="100" className={inputCls} value={form.discountPct} onChange={(e) => setForm({ ...form, discountPct: e.target.value })} /></Field>
                 <Field label="GST %"><input type="number" min="0" max="100" className={inputCls} value={form.gstPct} onChange={(e) => setForm({ ...form, gstPct: e.target.value })} /></Field>
               </div>
-              <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-2 rounded-lg inline-block">
+              <span className="bg-accent-soft text-accent-dark font-mono text-xs font-bold uppercase tracking-[0.16em] px-3 py-2 rounded-xl inline-block">
                 Totals are calculated on the backend — client-sent totals are ignored.
               </span>
               <div className="flex justify-end gap-3">

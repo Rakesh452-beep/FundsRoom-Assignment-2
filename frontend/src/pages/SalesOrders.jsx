@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { salesOrderApi } from '../api/endpoints';
+import { salesOrderApi, inventoryApi } from '../api/endpoints';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
@@ -20,14 +20,21 @@ export default function SalesOrders() {
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [dispatchForm, setDispatchForm] = useState({ vehicleNo: '', driver: '' });
+  const [inventory, setInventory] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
   const { hasRole } = useAuth();
 
+  const fetchInventory = useCallback(async () => {
+    const inv = await inventoryApi.list();
+    setInventory(inv.data);
+  }, []);
+
   const load = useCallback(async () => {
     const res = await salesOrderApi.list({ page, limit: 10, status: status || undefined });
     setData(res.data);
-  }, [page, status]);
+    fetchInventory().catch(() => {});
+  }, [page, status, fetchInventory]);
 
   useEffect(() => { load().catch(() => {}); }, [load]);
 
@@ -64,32 +71,58 @@ export default function SalesOrders() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Sales Orders</h1>
-          <p className="text-sm text-slate-500">Converted quotations · reservation & dispatch</p>
-        </div>
-        <select className="px-3 py-2 text-sm rounded-lg border border-slate-300" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+      <div className="flex flex-wrap items-center justify-end gap-4 mb-6">
+        <select className="px-3 py-2 text-sm rounded-xl bg-white border border-line text-bone focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
           <option value="">All statuses</option>
           {['PENDING', 'CONFIRMED', 'DISPATCHED', 'CANCELLED'].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
+      </div>
+
+      <div className="card p-5 mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="font-display text-base font-semibold text-bone">Stock Availability</h3>
+            <p className="text-xs text-bone-faint">Live availability across products (physical − reserved)</p>
+          </div>
+        </div>
+        {inventory.length === 0 ? (
+          <p className="text-sm text-bone-faint py-4 text-center">No inventory records yet.</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+            {inventory.slice(0, 12).map((i) => (
+              <div key={i.product.id} className={`rounded-xl border px-3.5 py-3 ${i.lowStock ? 'bg-warning-soft border-[#FDE68A]' : 'bg-night border-line'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-bone truncate">{i.product.name}</div>
+                    <div className="text-xs text-bone-faint mt-0.5">{i.product.code}</div>
+                  </div>
+                  {i.lowStock && <span className="px-2 py-0.5 rounded-full text-[0.62rem] font-bold uppercase bg-[#FDE68A] text-warning flex-shrink-0">Low</span>}
+                </div>
+                <div className="mt-2.5 flex items-baseline gap-2">
+                  <span className="font-display text-lg font-bold text-bone">{i.availableQty}</span>
+                  <span className="text-xs text-bone-faint">available {i.product.unit}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {!data ? <Spinner /> : data.items.length === 0 ? <EmptyState title="No sales orders" message="Convert accepted quotations to create orders." /> : (
         <>
           <Table headers={['Order', 'Customer', 'Quotation', 'Amount', 'Date', 'Status', 'Inventory']}>
             {data.items.map((so) => (
-              <tr key={so.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => openDetail(so.id)}>
-                <td className="px-4 py-3 font-semibold text-blue-700">{so.orderNumber}</td>
-                <td className="px-4 py-3 text-sm font-medium text-slate-800">{so.customer.companyName}</td>
-                <td className="px-4 py-3 text-sm text-slate-500">{so.quotation.quotationNumber}</td>
-                <td className="px-4 py-3 text-sm font-semibold text-slate-800">{formatINR(so.totalAmount)}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">{formatDate(so.orderDate)}</td>
+              <tr key={so.id} className="hover:bg-surface-deep cursor-pointer" onClick={() => openDetail(so.id)}>
+                <td className="px-4 py-3 font-semibold text-accent-dark">{so.orderNumber}</td>
+                <td className="px-4 py-3 text-sm font-medium text-ink">{so.customer.companyName}</td>
+                <td className="px-4 py-3 text-sm text-ink-muted">{so.quotation.quotationNumber}</td>
+                <td className="px-4 py-3 text-sm font-semibold text-ink">{formatINR(so.totalAmount)}</td>
+                <td className="px-4 py-3 text-sm text-ink-soft">{formatDate(so.orderDate)}</td>
                 <td className="px-4 py-3"><StatusBadge status={so.status} /></td>
                 <td className="px-4 py-3">
                   {so.status === 'PENDING' && insufficient(so)
-                    ? <span className="text-xs text-rose-600 font-semibold">Insufficient stock</span>
-                    : <span className="text-xs text-emerald-600">Checked</span>}
+                    ? <span className="text-xs text-error font-semibold">Insufficient stock</span>
+                    : <span className="text-xs text-success">Checked</span>}
                 </td>
               </tr>
             ))}
@@ -102,15 +135,15 @@ export default function SalesOrders() {
         {detail && (
           <div className="space-y-5">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div><div className="text-xs text-slate-400">Customer</div><div className="font-semibold text-slate-800">{detail.customer.companyName}</div></div>
-              <div><div className="text-xs text-slate-400">Quotation</div><div className="text-slate-700">{detail.quotation.quotationNumber}</div></div>
-              <div><div className="text-xs text-slate-400">Order date</div><div className="text-slate-700">{formatDate(detail.orderDate)}</div></div>
-              <div><div className="text-xs text-slate-400">Total</div><div className="font-bold text-emerald-700">{formatINR(detail.totalAmount)}</div></div>
-              <div><div className="text-xs text-slate-400">Status</div><StatusBadge status={detail.status} /></div>
+              <div><div className="text-xs text-ink-faint">Customer</div><div className="font-semibold text-ink">{detail.customer.companyName}</div></div>
+              <div><div className="text-xs text-ink-faint">Quotation</div><div className="text-ink-soft">{detail.quotation.quotationNumber}</div></div>
+              <div><div className="text-xs text-ink-faint">Order date</div><div className="text-ink-soft">{formatDate(detail.orderDate)}</div></div>
+              <div><div className="text-xs text-ink-faint">Total</div><div className="font-bold text-success">{formatINR(detail.totalAmount)}</div></div>
+              <div><div className="text-xs text-ink-faint">Status</div><StatusBadge status={detail.status} /></div>
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">Items & Inventory</h4>
+              <h4 className="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-bone-faint mb-2">Items & Inventory</h4>
               <Table headers={['Product', 'Qty', 'Unit Price', 'Line Amount', 'Physical', 'Reserved', 'Available']}>
                 {detail.items.map((it) => {
                   const inv = it.product?.inventory;
@@ -118,13 +151,13 @@ export default function SalesOrders() {
                   const low = inv && it.qty > available;
                   return (
                     <tr key={it.productId}>
-                      <td className="px-4 py-2 text-sm font-medium text-slate-800">{it.product.name}</td>
+                      <td className="px-4 py-2 text-sm font-medium text-ink">{it.product.name}</td>
                       <td className="px-4 py-2 text-sm">{it.qty} {it.product.unit}</td>
                       <td className="px-4 py-2 text-sm">{formatINR(it.unitPrice)}</td>
                       <td className="px-4 py-2 text-sm font-semibold">{formatINR(it.lineAmount)}</td>
                       <td className="px-4 py-2 text-sm">{inv?.physicalQty ?? '-'}</td>
                       <td className="px-4 py-2 text-sm">{inv?.reservedQty ?? '-'}</td>
-                      <td className={`px-4 py-2 text-sm font-semibold ${low ? 'text-rose-600' : ''}`}>{available ?? '-'}</td>
+                      <td className={`px-4 py-2 text-sm font-semibold ${low ? 'text-error' : ''}`}>{available ?? '-'}</td>
                     </tr>
                   );
                 })}
@@ -132,10 +165,10 @@ export default function SalesOrders() {
             </div>
 
             {detail.dispatches?.length > 0 && (
-              <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
-                <h4 className="text-sm font-semibold text-purple-800 mb-2">Dispatch</h4>
+              <div className="rounded-xl border border-line bg-night-raise p-4">
+                <h4 className="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-bone-soft mb-2">Dispatch</h4>
                 {detail.dispatches.map((d) => (
-                  <div key={d.id} className="text-sm text-purple-900">
+                  <div key={d.id} className="text-sm text-bone-soft">
                     <b>{d.dispatchNumber}</b> · {formatDate(d.dispatchDate)} · Vehicle {d.vehicleNo}
                     {d.driver ? ` · Driver: ${d.driver}` : ''} · {d.items.map((i) => `${i.product.name} x${i.qty}`).join(', ')}
                   </div>
@@ -147,7 +180,7 @@ export default function SalesOrders() {
               <div className="flex flex-wrap gap-2">
                 {detail.status === 'PENDING' && (
                   detail.items.some((it) => it.qty > ((it.product?.inventory?.physicalQty ?? 0) - (it.product?.inventory?.reservedQty ?? 0)))
-                    ? <span className="text-sm font-semibold text-rose-600">Cannot confirm — insufficient available stock</span>
+                    ? <span className="text-sm font-semibold text-error">Cannot confirm — insufficient available stock</span>
                     : <Button variant="primary" onClick={() => setConfirmAction({ type: 'confirm', id: detail.id, title: 'Confirm sales order?', message: 'Inventory will be reserved atomically by the database.' })}>Confirm & Reserve</Button>
                 )}
                 {detail.status === 'CONFIRMED' && (

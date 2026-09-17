@@ -32,7 +32,20 @@ export const quotationApi = {
   create: (data) => client.post('/quotations', data).then((r) => r.data),
   updateStatus: (id, status) => client.patch(`/quotations/${id}/status`, { status }).then((r) => r.data),
   convert: (id) => client.post(`/quotations/${id}/convert`).then((r) => r.data),
-  pdfUrl: (id) => `/api/quotations/${id}/pdf`,
+  downloadPdf: async (id) => {
+    const res = await client.get(`/quotations/${id}/pdf`, { responseType: 'blob' });
+    const header = res.headers['content-disposition'] || '';
+    const match = /filename="?([^"]+)"?/.exec(header);
+    const filename = match ? match[1] : `quotation-${id}.pdf`;
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
 };
 
 export const salesOrderApi = {
@@ -41,6 +54,10 @@ export const salesOrderApi = {
   confirm: (id) => client.post(`/sales-orders/${id}/confirm`).then((r) => r.data),
   dispatch: (id, data) => client.post(`/sales-orders/${id}/dispatch`, data).then((r) => r.data),
   cancel: (id) => client.post(`/sales-orders/${id}/cancel`).then((r) => r.data),
+};
+
+export const dispatchApi = {
+  list: (params = {}) => client.get('/dispatches', { params }).then((r) => r.data),
 };
 
 export const dashboardApi = {

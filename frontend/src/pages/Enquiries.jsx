@@ -73,14 +73,10 @@ export default function Enquiries() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Enquiries</h1>
-          <p className="text-sm text-slate-500">Customer enquiries with product demand</p>
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="w-56"><SearchInput value={search} onChange={setSearch} placeholder="Search enquiry / customer..." /></div>
-          <select className="px-3 py-2 text-sm rounded-lg border border-slate-300" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+          <select className="px-3 py-2 text-sm rounded-xl bg-white border border-line text-bone focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
             <option value="">All statuses</option>
             {['NEW', 'QUOTED', 'WON', 'LOST'].map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -92,20 +88,20 @@ export default function Enquiries() {
         <>
           <Table headers={['Number', 'Customer', 'Date', 'Required By', 'Products', 'Status', 'Actions']}>
             {data.items.map((en) => (
-              <tr key={en.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-semibold text-blue-700">{en.enquiryNumber}</td>
+              <tr key={en.id} className="hover:bg-surface-deep">
+                <td className="px-4 py-3 font-semibold text-accent-dark">{en.enquiryNumber}</td>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-slate-800">{en.customer.companyName}</div>
-                  <div className="text-xs text-slate-400">{en.customer.city || '-'}</div>
+                  <div className="font-medium text-ink">{en.customer.companyName}</div>
+                  <div className="text-xs text-ink-faint">{en.customer.city || '-'}</div>
                 </td>
-                <td className="px-4 py-3 text-sm text-slate-600">{formatDate(en.enquiryDate)}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">{formatDate(en.requiredDate)}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">{en.items.length} product{en.items.length > 1 ? 's' : ''}</td>
+                <td className="px-4 py-3 text-sm text-ink-soft">{formatDate(en.enquiryDate)}</td>
+                <td className="px-4 py-3 text-sm text-ink-soft">{formatDate(en.requiredDate)}</td>
+                <td className="px-4 py-3 text-sm text-ink-soft">{en.items.length} product{en.items.length > 1 ? 's' : ''}</td>
                 <td className="px-4 py-3"><StatusBadge status={en.status} /></td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2 items-center">
                     {en.status === 'NEW' && <Button variant="ghost" size="sm" onClick={() => handleStatus(en.id, 'LOST')}>Mark Lost</Button>}
-                    {en.quotation && <span className="text-xs text-slate-400">Quoted</span>}
+                    {en.quotation && <span className="text-xs text-ink-faint">Quoted</span>}
                   </div>
                 </td>
               </tr>
@@ -124,7 +120,7 @@ export default function Enquiries() {
                 {customers.map((c) => <option key={c.id} value={c.id}>{c.companyName}</option>)}
               </select>
             </Field>
-            <div className="text-xs text-slate-400 self-end pb-2">— or fill new customer below —</div>
+            <div className="text-xs text-ink-faint self-end pb-2">— or fill new customer below —</div>
             <Field label="Company name"><input className={inputCls} value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} /></Field>
             <Field label="Contact person"><input className={inputCls} value={form.contactPerson} onChange={(e) => setForm({ ...form, contactPerson: e.target.value })} /></Field>
             <Field label="Mobile"><input className={inputCls} value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} /></Field>
@@ -133,7 +129,7 @@ export default function Enquiries() {
           </div>
           <Field label="Required by"><input type="date" className={inputCls} value={form.requiredDate} onChange={(e) => setForm({ ...form, requiredDate: e.target.value })} /></Field>
           <div>
-            <span className="block text-sm font-medium text-slate-700 mb-1">Products</span>
+            <span className="block text-sm font-medium text-ink-soft mb-1">Products</span>
             <ProductLinesEditor lines={form.lines} setLines={(fn) => setForm({ ...form, lines: fn(form.lines) })} products={products} enablePrice={false} qtyKey="quantity" />
           </div>
           <Field label="Notes"><textarea rows={2} className={inputCls} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
