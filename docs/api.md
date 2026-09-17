@@ -1,5 +1,8 @@
 # API Documentation — Zenitek ERP
 
+> **Interactive version:** Swagger UI is served at `http://localhost:8080/api-docs`
+> (OpenAPI 3.0). This file documents the same surface in static form.
+
 Base URL (dev): `http://localhost:8080/api`
 All endpoints except `POST /api/auth/login` and `GET /health` require:
 

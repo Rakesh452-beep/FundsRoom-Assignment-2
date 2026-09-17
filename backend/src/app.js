@@ -4,6 +4,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 const fs = require('fs');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 const env = require('./config/env');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
@@ -21,6 +23,8 @@ if (env.nodeEnv !== 'test') {
 app.get('/health', (_req, res) => res.json({ success: true, data: { status: 'UP', service: 'erp-api', time: new Date().toISOString() } }));
 
 app.use('/api', routes);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { customSiteTitle: 'Zenitek ERP — API Reference' }));
 
 const publicDir = path.join(__dirname, '..', 'public');
 if (fs.existsSync(publicDir)) {
