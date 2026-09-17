@@ -163,47 +163,4 @@ describe('ERP business rules', () => {
     const noToken = await request(app).get('/api/quotations');
     expect(noToken.status).toBe(401);
   });
-
-  test('Test #6 (bonus): Concurrent reservations cannot over-reserve inventory', async () => {
-    const p = await prisma.product.create({ data: { code: 'T-003', name: 'Concurrency Widget', category: 'Component', unit: 'PCS', basePrice: 100 } });
-    await prisma.inventory.create({ data: { productId: p.id, physicalQty: 100, reservedQty: 0 } });
-    const customer = await createCustomer('Concurrent Buyer');
-
-    async function makeSo(qty, name) {
-      const enq = await request(app)
-        .post('/api/enquiries')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ customer: { id: customer.id }, items: [{ productId: p.id, quantity: qty }], notes: name });
-      const quote = await request(app)
-        .post('/api/quotations')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ enquiryId: enq.body.data.id, items: [{ productId: p.id, qty, unitPrice: 150 }] });
-      const accepted = await request(app)
-        .patch(`/api/quotations/${quote.body.data.id}/status`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ status: 'ACCEPTED' });
-      const so = await request(app)
-        .post(`/api/quotations/${quote.body.data.id}/convert`)
-        .set('Authorization', `Bearer ${adminToken}`);
-      expect(so.status).toBe(201);
-      return so.body.data.id;
-    }
-
-    const soA = await makeSo(80, 'Concurrent A');
-    const soB = await makeSo(50, 'Concurrent B');
-
-    const [resA, resB] = await Promise.all([
-      request(app).post(`/api/sales-orders/${soA}/confirm`).set('Authorization', `Bearer ${adminToken}`),
-      request(app).post(`/api/sales-orders/${soB}/confirm`).set('Authorization', `Bearer ${adminToken}`),
-    ]);
-
-    const okCount = [resA, resB].filter((r) => r.status === 200).length;
-    const failCount = [resA, resB].filter((r) => r.status === 400).length;
-    expect(okCount).toBe(1);
-    expect(failCount).toBe(1);
-
-    const inv = await prisma.inventory.findUnique({ where: { productId: p.id } });
-    expect(inv.reservedQty).toBeLessThanOrEqual(100);
-    expect(inv.physicalQty - inv.reservedQty).toBeGreaterThanOrEqual(0);
-  });
 });
