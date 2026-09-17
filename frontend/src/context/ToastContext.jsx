@@ -30,10 +30,10 @@ export function ToastProvider({ children }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`min-w-[280px] max-w-sm px-4 py-3 rounded-lg shadow-lg text-sm font-medium animate-[fadeIn_.2s] ${
+            className={`min-w-[280px] max-w-sm px-4 py-3 rounded-xl shadow-soft text-sm font-medium animate-[fadeIn_.2s] ${
               t.type === 'success' ? 'bg-emerald-600 text-white'
               : t.type === 'error' ? 'bg-rose-600 text-white'
-              : 'bg-slate-800 text-white'
+              : 'bg-white text-bone border border-line'
             }`}
           >
             {t.message}

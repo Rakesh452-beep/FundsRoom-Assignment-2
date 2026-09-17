@@ -10,7 +10,7 @@ export default function ProductLinesEditor({ lines, setLines, products, enablePr
       {lines.map((line, idx) => (
         <div key={idx} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
           <select
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white border border-line text-bone focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50"
             value={line.productId}
             onChange={(e) => update(idx, 'productId', Number(e.target.value))}
           >
@@ -22,7 +22,7 @@ export default function ProductLinesEditor({ lines, setLines, products, enablePr
           <input
             type="number"
             min="1"
-            className="w-24 px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="w-24 px-3.5 py-2.5 text-sm rounded-xl bg-white border border-line text-bone focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50"
             value={line[qtyKey]}
             onChange={(e) => update(idx, qtyKey, Number(e.target.value))}
             placeholder="Qty"
@@ -32,7 +32,7 @@ export default function ProductLinesEditor({ lines, setLines, products, enablePr
               type="number"
               min="0"
               step="0.01"
-              className="w-28 px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-28 px-3.5 py-2.5 text-sm rounded-xl bg-white border border-line text-bone focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50"
               value={line.unitPrice}
               onChange={(e) => update(idx, 'unitPrice', Number(e.target.value))}
               placeholder="Price"

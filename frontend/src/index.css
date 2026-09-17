@@ -2,10 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-night text-bone font-sans;
+  }
+  ::selection {
+    @apply bg-accent text-white;
+  }
+  .eyebrow {
+    @apply font-sans font-medium text-[0.68rem] uppercase tracking-[0.14em] text-bone-faint;
+  }
+  .page-title {
+    @apply font-display text-3xl md:text-[2.5rem] font-bold tracking-[-0.02em] text-bone leading-tight;
+  }
+  .page-sub {
+    @apply font-sans font-medium text-[0.7rem] uppercase tracking-[0.14em] text-bone-faint;
+  }
+  .card {
+    @apply bg-white border border-line rounded-2xl;
+  }
 }
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #F9FAFB; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
