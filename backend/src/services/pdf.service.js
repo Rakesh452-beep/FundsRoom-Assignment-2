@@ -1,5 +1,21 @@
 const PDFDocument = require('pdfkit');
 
+const COLOR = {
+  ink: '#111827',
+  body: '#374151',
+  secondary: '#6B7280',
+  muted: '#94A3B8',
+  divider: '#E5E7EB',
+  accent: '#2563EB',
+};
+
+const RIGHT_X = 400;
+const RIGHT_W = 145;
+
+function rightText(doc, text, y) {
+  doc.text(text, RIGHT_X, y, { width: RIGHT_W, align: 'right' });
+}
+
 function buildInvoicePDF(quotation) {
   return new Promise((resolve, reject) => {
     try {
@@ -8,68 +24,85 @@ function buildInvoicePDF(quotation) {
       doc.on('data', (chunk) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
 
-      const y0 = doc.y;
-      doc.fontSize(20).fillColor('#111827').text('ZENITEK INDUSTRIES', { continued: false });
-      doc.fontSize(10).fillColor('#6b7280').text('Plot 42, MIDC Industrial Estate, Pune - 411026');
-      doc.moveDown(0.2);
-      doc.fontSize(10).text('GSTIN: 27ABCDE1234F1Z5 | Ph: +91 98220 12345');
-      doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#2563eb').lineWidth(2).stroke();
-      doc.moveDown(0.8);
+      doc.font('Helvetica');
 
-      doc.fontSize(13).fillColor('#111827').text('QUOTATION');
-      const qn = doc.y;
-      doc.fontSize(10).fillColor('#374151');
-      doc.text(`Quotation No: ${quotation.quotationNumber}`, 400, qn);
-      doc.text(`Date: ${new Date(quotation.createdAt).toLocaleDateString('en-IN')}`, 400, qn + 14);
-      doc.text(`Valid Until: ${quotation.validUntil ? new Date(quotation.validUntil).toLocaleDateString('en-IN') : '-'}`, 400, qn + 28);
-      doc.moveDown(0.8);
+      // Company header
+      doc.fontSize(28).fillColor(COLOR.ink).text('ZENITEK INDUSTRIES');
+      doc.fontSize(16).fillColor(COLOR.secondary).text('Plot 42, MIDC Industrial Estate, Pune - 411026');
+      doc.fontSize(16).fillColor(COLOR.secondary).text('GSTIN: 27ABCDE1234F1Z5  |  Ph: +91 98220 12345');
 
-      doc.fontSize(11).fillColor('#111827').text('Bill To:');
-      doc.fontSize(10).fillColor('#374151');
+      // Thin horizontal accent line
+      doc.moveTo(50, doc.y + 8).lineTo(545, doc.y + 8).strokeColor(COLOR.accent).lineWidth(1).stroke();
+
+      // Title + quotation details
+      doc.moveDown(1.4);
+      const titleY = doc.y;
+      doc.fontSize(23).fillColor(COLOR.ink).text('QUOTATION');
+      doc.fontSize(16).fillColor(COLOR.body);
+      rightText(doc, `Quotation No: ${quotation.quotationNumber}`, titleY);
+      rightText(doc, `Date: ${new Date(quotation.createdAt).toLocaleDateString('en-IN')}`, titleY + 22);
+      rightText(doc, `Valid Until: ${quotation.validUntil ? new Date(quotation.validUntil).toLocaleDateString('en-IN') : '-'}`, titleY + 44);
+
+      doc.moveDown(1.8);
+      doc.fontSize(16).fillColor(COLOR.ink).text('Bill To:');
+      doc.fontSize(16).fillColor(COLOR.body);
       doc.text(quotation.customer.companyName);
       doc.text(`${quotation.customer.contactPerson} | ${quotation.customer.mobile}`);
       if (quotation.customer.email) doc.text(quotation.customer.email);
       if (quotation.customer.city) doc.text(quotation.customer.city);
       doc.text(`Enquiry Ref: ${quotation.enquiry.enquiryNumber}`);
-      doc.moveDown(1);
 
+      doc.moveDown(1.6);
+
+      // Item table
       const tableTop = doc.y;
-      const colX = { sn: 50, item: 80, desc: 180, qty: 320, price: 380, disc: 430, amt: 490 };
-      doc.fontSize(9).fillColor('#111827');
+      const colX = { sn: 50, item: 80, qty: 330, price: 390, amt: 490 };
+      doc.fontSize(16).fillColor(COLOR.ink);
       doc.text('#', colX.sn, tableTop);
       doc.text('Product', colX.item, tableTop);
       doc.text('Qty', colX.qty, tableTop);
       doc.text('Unit Price', colX.price, tableTop);
       doc.text('Amount', colX.amt, tableTop);
-      doc.moveTo(50, tableTop + 14).lineTo(545, tableTop + 14).strokeColor('#e5e7eb').stroke();
+      doc.moveTo(50, tableTop + 20).lineTo(545, tableTop + 20).strokeColor(COLOR.divider).lineWidth(1).stroke();
 
-      let y = tableTop + 22;
+      let y = tableTop + 30;
       quotation.items.forEach((it, i) => {
-        doc.fontSize(9).fillColor('#374151');
+        doc.fontSize(15).fillColor(COLOR.body);
         doc.text(String(i + 1), colX.sn, y);
-        doc.text(it.product.name, colX.item, y, { width: 130 });
-        doc.text(String(it.qty) + ` ${it.product.unit}`, colX.qty, y);
-        doc.text('₹ ' + Number(it.unitPrice).toFixed(2), colX.price, y);
-        doc.text('₹ ' + Number(it.lineAmount).toFixed(2), colX.amt, y);
-        y += 18;
+        doc.text(it.product.name, colX.item, y, { width: 220 });
+        doc.text(`${String(it.qty)} ${it.product.unit}`, colX.qty, y);
+        doc.text(`Rs. ${Number(it.unitPrice).toFixed(2)}`, colX.price, y);
+        doc.text(`Rs. ${Number(it.lineAmount).toFixed(2)}`, colX.amt, y);
+        y += 24;
       });
-      doc.moveTo(50, y + 4).lineTo(545, y + 4).strokeColor('#e5e7eb').stroke();
+      doc.moveTo(50, y + 4).lineTo(545, y + 4).strokeColor(COLOR.divider).lineWidth(1).stroke();
 
-      doc.fontSize(10).fillColor('#111827');
-      doc.text(`Discount: ${Number(quotation.discountPct)}%`, 400, y + 14);
-      doc.text(`GST: ${Number(quotation.gstPct)}%`, 400, y + 30);
-      doc.fontSize(13).fillColor('#2563eb').text(`GRAND TOTAL: ₹ ${Number(quotation.grandTotal).toFixed(2)}`, 400, y + 46);
+      // Totals
+      doc.fontSize(16).fillColor(COLOR.body);
+      rightText(doc, `Discount: ${Number(quotation.discountPct)}%`, y + 18);
+      rightText(doc, `GST: ${Number(quotation.gstPct)}%`, y + 40);
+      doc.fontSize(23).fillColor(COLOR.accent).text(
+        `GRAND TOTAL: Rs. ${Number(quotation.grandTotal).toFixed(2)}`,
+        RIGHT_X,
+        y + 64,
+        { width: RIGHT_W, align: 'right' }
+      );
 
-      const fy = y + 90;
-      doc.fontSize(9).fillColor('#6b7280');
-      doc.text('Terms & Conditions:');
-      doc.text('1. Quotation is valid until the mentioned validity date.');
-      doc.text('2. Prices are exclusive of transportation charges.');
-      doc.text('3. Payment terms: 50% advance, balance before dispatch.');
-      doc.text('4. This is a computer generated quotation and does not require a signature.');
+      // Terms & conditions
+      const termsY = y + 116;
+      doc.fontSize(16).fillColor(COLOR.ink).text('Terms & Conditions:', 50, termsY);
+      doc.fontSize(14).fillColor(COLOR.secondary);
+      doc.text('1. Quotation is valid until the mentioned validity date.', 50, termsY + 24);
+      doc.text('2. Prices are exclusive of transportation charges.', 50, termsY + 44);
+      doc.text('3. Payment terms: 50% advance, balance before dispatch.', 50, termsY + 64);
+      doc.text('4. This is a computer generated quotation and does not require a signature.', 50, termsY + 84);
 
-      const pageHeight = doc.page.height - doc.page.marginBottom;
-      doc.fontSize(8).fillColor('#9ca3af').text(`Generated by Zenitek ERP on ${new Date().toLocaleString('en-IN')}`, 50, doc.page.height - 60);
+      // Footer
+      doc.fontSize(14).fillColor(COLOR.muted).text(
+        `Generated by Zenitek ERP on ${new Date().toLocaleString('en-IN')}`,
+        50,
+        doc.page.height - 60
+      );
 
       doc.end();
     } catch (err) {
