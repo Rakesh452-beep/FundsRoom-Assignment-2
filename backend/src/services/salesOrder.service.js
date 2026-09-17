@@ -104,6 +104,19 @@ async function confirm(id, userId) {
     }
 
     for (const item of salesOrder.items) {
+      const rows = await tx.$queryRaw`
+        SELECT "physicalQty", "reservedQty"
+        FROM "inventory"
+        WHERE "productId" = ${item.productId}
+        FOR UPDATE
+      `;
+      if (!rows.length) {
+        throw new AppError(400, 'INSUFFICIENT_STOCK', `Insufficient available stock for product ${item.productId}`);
+      }
+      const available = Number(rows[0].physicalQty) - Number(rows[0].reservedQty);
+      if (available < item.qty) {
+        throw new AppError(400, 'INSUFFICIENT_STOCK', `Insufficient available stock for product ${item.productId}`);
+      }
       const updated = await tx.$executeRaw`
         UPDATE "inventory"
         SET "reservedQty" = "reservedQty" + ${item.qty}
