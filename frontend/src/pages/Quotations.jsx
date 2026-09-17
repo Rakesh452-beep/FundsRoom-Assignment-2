@@ -43,9 +43,11 @@ export default function Quotations() {
 
   const openCreate = async () => {
     setShowCreate(true);
-    const [eq, ps] = await Promise.all([enquiryApi.list({ page: 1, limit: 100 }), productApi.list()]);
-    setEnquiries(eq.data.items || []);
-    setProducts(ps.data);
+    try {
+      const [eq, ps] = await Promise.all([enquiryApi.list({ page: 1, limit: 100 }), productApi.list()]);
+      setEnquiries(eq.data.items || []);
+      setProducts(ps.data);
+    } catch (err) { toast.error(err.message); }
   };
 
   const onEnquiryChange = (id) => {
@@ -53,7 +55,7 @@ export default function Quotations() {
     const enq = enquiries.find((e) => String(e.id) === String(id));
     if (enq) {
       const items = enq.items.map((it) => ({ productId: it.productId, quantity: it.quantity, unitPrice: Number(it.product.basePrice) }));
-      setSelectedProducts(enq.items.map((it) => ({ productId: it.productId, product: it.product })));
+      setSelectedProducts(enq.items.map((it) => ({ id: it.productId, code: it.product.code, name: it.product.name })));
       setForm((f) => ({ ...f, enquiryId: id, lines: items }));
     } else {
       setSelectedProducts([]);

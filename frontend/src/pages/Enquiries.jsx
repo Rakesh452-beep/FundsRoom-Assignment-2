@@ -40,9 +40,11 @@ export default function Enquiries() {
 
   const openCreate = async () => {
     setShowCreate(true);
-    const [ps, cs] = await Promise.all([productApi.list(), customerApi.list()]);
-    setProducts(ps.data);
-    setCustomers(cs.data);
+    try {
+      const [ps, cs] = await Promise.all([productApi.list(), customerApi.list()]);
+      setProducts(ps.data);
+      setCustomers(cs.data);
+    } catch (err) { toast.error(err.message); }
   };
 
   const handleStatus = async (id, newStatus) => {
